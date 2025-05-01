@@ -6,10 +6,10 @@ class MolecularOptimization(Problem):
     def __init__(self, smiles_list):
         super().__init__(
             n_var=1,
-            n_obj=3,  # Now 3 objectives
+            n_obj=3,
             n_constr=0,
             xl=np.array([0.0]),
-            xu=np.array([max(0, len(smiles_list) - 1)])
+            xu=np.array([len(smiles_list) - 1])
         )
         self.smiles_list = smiles_list
 
@@ -17,6 +17,6 @@ class MolecularOptimization(Problem):
         F = []
         for row in X:
             idx = int(row[0])
-            qed, sa, similarity = get_objectives(self.smiles_list[idx])
-            F.append([-qed, sa, -similarity])  # Minimize SA, maximize QED and similarity
+            qed, sa, sim = get_objectives(self.smiles_list[idx])
+            F.append([-qed, sa, -sim])  # maximize QED/similarity, minimize SA
         out["F"] = np.array(F)

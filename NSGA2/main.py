@@ -1,119 +1,104 @@
 import matplotlib.pyplot as plt
 from pymoo.algorithms.moo.nsga2 import NSGA2
-from pymoo.termination import get_termination
 from pymoo.optimize import minimize
-from utils import generate_random_smiles
+from pymoo.termination import get_termination
+from utils import generate_random_selfies, decode_selfies, mutate_selfies, crossover_selfies
 from problem import MolecularOptimization
-from utils import mutate_selfies
 import numpy as np
-from utils import crossover_selfies, decode_selfies
+import random
+from rdkit import Chem
 
-from utils import decode_selfies
 
-def evolve_population_with_crossover(selfies_list, generations=10, pop_size=100, crossover_rate=0.5, mutation_rate=0.1):
+def evolve_population_with_crossover(selfies_list, generations, pop_size, crossover_rate, mutation_rate):
     current_population = selfies_list.copy()
 
     for gen in range(generations):
-        new_population = []
-
-        for _ in range(pop_size // 2):
+        next_gen = []
+        while len(next_gen) < pop_size:
             if len(current_population) < 2:
-                break
+                current_population += generate_random_selfies(2)
 
             p1, p2 = np.random.choice(current_population, 2, replace=False)
 
-            if decode_selfies(p1) is None or decode_selfies(p2) is None:
-                child1, child2 = p1, p2
+            # Crossover
+            if np.random.rand() < crossover_rate:
+                child1, child2 = crossover_selfies(p1, p2)
             else:
-                if np.random.rand() < crossover_rate:
-                    child1, child2 = crossover_selfies(p1, p2)
-                else:
-                    child1, child2 = p1, p2
+                child1, child2 = p1, p2
 
-            # Tiny mutation
-            if np.random.rand() < mutation_rate:
-                child1 = mutate_selfies(child1)
-            if np.random.rand() < mutation_rate:
-                child2 = mutate_selfies(child2)
+            # # Mutation
+            # child1 = mutate_selfies(child1, mutation_rate)
+            # child2 = mutate_selfies(child2, mutation_rate)
 
-            new_population.extend([child1, child2])
+            for child in [child1, child2]:
+                smiles = decode_selfies(child)
+                if smiles and len(smiles) > 5 and Chem.MolFromSmiles(smiles).GetNumAtoms() >= 5:
+                    next_gen.append(child)
+                if len(next_gen) >= pop_size:
+                    break
 
-        # Decode new_population back to SMILES
-        decoded_smiles = []
-        for selfie in new_population:
-            smiles = decode_selfies(selfie)
-            if smiles:
-                decoded_smiles.append(smiles)
+        current_population = next_gen
 
-        # Backup: if too few valid molecules, add some random new ones
-        if len(decoded_smiles) < pop_size:
-            print(f"Population too small after generation {gen}, adding random molecules...")
-            decoded_smiles += generate_random_smiles(pop_size - len(decoded_smiles))
-
-        # Final population clipping
-        current_population = decoded_smiles[:pop_size]
-
-    return current_population
+    final_smiles = [decode_selfies(s) for s in current_population if decode_selfies(s)]
+    return final_smiles
 
 
 def main():
-    from random import randint
+    # === Literature-recommended Parameters ===
+    POP_SIZE = 500
+    NGEN_EA = 200
+    NGEN_NS = 200
+    CROSSOVER_RATE = 0.9
+    MUTATION_RATE = 0.1
 
-    # Step 1: Generate random molecules
-    selfies_list = generate_random_smiles(2000)
+    seed = random.randint(1, 100)
+    selfies_list = generate_random_selfies(POP_SIZE)
 
-    # Step 2: Evolve with crossover
-    evolved_smiles_list = evolve_population_with_crossover(selfies_list, generations=10, pop_size=100, crossover_rate=0.5)
+    evolved_smiles = evolve_population_with_crossover(
+        selfies_list,
+        generations=NGEN_EA,
+        pop_size=POP_SIZE,
+        crossover_rate=CROSSOVER_RATE,
+        mutation_rate=MUTATION_RATE
+    )
 
+    if len(evolved_smiles) < 10:
+        print("❌ Too few valid molecules generated. Try rerunning or adjusting parameters.")
+        return
 
-    # Step 2.5: SAFETY check
-    if len(evolved_smiles_list) == 0:
-        print("No valid molecules generated after crossover. Exiting safely...")
-        exit(1)
-
-    # Step 3: Set population size
-    pop_size = min(len(evolved_smiles_list), 100)
-
-    # Step 4: Setup problem and run
-    problem = MolecularOptimization(evolved_smiles_list)
-    algorithm = NSGA2(pop_size=pop_size)
-    termination = get_termination("n_gen", 50)
-    seed = randint(1, 100)
-
+    problem = MolecularOptimization(evolved_smiles)
+    algorithm = NSGA2(pop_size=len(evolved_smiles))
+    termination = get_termination("n_gen", NGEN_NS)
     result = minimize(problem, algorithm, termination, seed=seed, verbose=True)
 
-    X = result.X
-    F = result.F
-
+    X, F = result.X, result.F
     qed_vals = -F[:, 0]
     sa_vals = F[:, 1]
-    similarity_vals = -F[:, 2]
+    sim_vals = -F[:, 2]
 
-    # 3D Pareto Plot
-    fig = plt.figure(figsize=(10, 8))
+    fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(qed_vals, sa_vals, similarity_vals)
+    ax.scatter(qed_vals, sa_vals, sim_vals)
     ax.set_xlabel("QED")
-    ax.set_ylabel("SA Score")
-    ax.set_zlabel("Tanimoto Similarity")
-    ax.set_title("3D Pareto Front: QED vs SA vs Similarity")
+    ax.set_ylabel("SA")
+    ax.set_zlabel("Similarity")
+    ax.set_title("3D Pareto Front")
     plt.show()
 
-    # Print top 10 by QED
-    print("\nTop 10 Molecules (by QED):")
-    seen = set()
     top_indices = qed_vals.argsort()[::-1]
+    seen = set()
     count = 0
+    print("\nTop 10 Molecules (by QED):")
     for i in top_indices:
-        mol_idx = int(X[i][0])
-        smiles = evolved_smiles_list[mol_idx]
+        idx = int(X[i][0])
+        smiles = evolved_smiles[idx]
         if smiles not in seen:
-            print(f"{count+1}. SMILES: {smiles} | QED: {qed_vals[i]:.3f} | SA: {sa_vals[i]:.3f} | Similarity: {similarity_vals[i]:.3f}")
+            print(f"{count+1}. SMILES: {smiles} | QED: {qed_vals[i]:.3f} | SA: {sa_vals[i]:.3f} | Similarity: {sim_vals[i]:.3f}")
             seen.add(smiles)
             count += 1
         if count >= 10:
             break
 
+
 if __name__ == "__main__":
     main()
-
