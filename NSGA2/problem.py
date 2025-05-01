@@ -14,9 +14,7 @@ class MolecularOptimization(Problem):
         self.smiles_list = smiles_list
 
     def _evaluate(self, X, out, *args, **kwargs):
-        F = []
-        for row in X:
-            idx = int(row[0])
-            qed, sa, sim = get_objectives(self.smiles_list[idx])
-            F.append([-qed, sa, -sim])  # maximize QED/similarity, minimize SA
-        out["F"] = np.array(F)
+        out["F"] = np.array([
+            [-q, s, -t]
+            for [q, s, t] in (get_objectives(self.smiles_list[int(x[0])]) for x in X)
+        ])

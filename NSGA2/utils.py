@@ -1,42 +1,51 @@
 import selfies as sf
 import numpy as np
 from rdkit import Chem
-from rdkit.Chem import QED
-from rdkit.Chem import AllChem, DataStructs
+from rdkit.Chem import QED, AllChem, DataStructs
 import sascorer
 
 REFERENCE_SMILES = "CCO"
 REFERENCE_MOL = Chem.MolFromSmiles(REFERENCE_SMILES)
-REFERENCE_FP = AllChem.GetMorganFingerprintAsBitVect(REFERENCE_MOL, radius=2, nBits=2048)
-
-
-def generate_random_selfie():
-    alphabet = list(sf.get_semantic_robust_alphabet())
-    return ''.join(np.random.choice(alphabet, size=np.random.randint(10, 30)))
-
-
-def generate_random_selfies(n=100):
-    selfies_list = []
-    while len(selfies_list) < n:
-        selfie = generate_random_selfie()
-        if decode_selfies(selfie):
-            selfies_list.append(selfie)
-    return selfies_list
-
+REFERENCE_FP = AllChem.GetMorganFingerprintAsBitVect(REFERENCE_MOL, 2, 2048)
 
 def decode_selfies(selfie):
     try:
         smiles = sf.decoder(selfie)
         mol = Chem.MolFromSmiles(smiles)
-        # Add stricter filters
-        if mol is None:
+        if mol is None or mol.GetNumHeavyAtoms() < 5:
             return None
-        if mol.GetNumHeavyAtoms() < 5:
-            return None  # Filter out trivial molecules
         return smiles
     except:
         return None
 
+def encode_smiles(smiles):
+    try:
+        selfie = sf.encoder(smiles)
+        if decode_selfies(selfie):  # Round-trip check
+            return selfie
+    except:
+        return None
+
+def load_smiles_from_file(path):
+    with open(path, "r") as f:
+        smiles = [line.strip() for line in f if line.strip()]
+    valid = [encode_smiles(smi) for smi in smiles]
+    return [s for s in valid if s]
+
+def crossover_selfies(parent1, parent2):
+    t1 = list(sf.split_selfies(parent1))
+    t2 = list(sf.split_selfies(parent2))
+
+    if len(t1) < 2 or len(t2) < 2:
+        return parent1, parent2
+
+    pt1 = np.random.randint(1, len(t1))
+    pt2 = np.random.randint(1, len(t2))
+
+    c1 = ''.join(t1[:pt1] + t2[pt2:])
+    c2 = ''.join(t2[:pt2] + t1[pt1:])
+
+    return c1, c2
 
 
 def mutate_selfies(selfie, mutation_rate=0.1):
@@ -57,32 +66,13 @@ def mutate_selfies(selfie, mutation_rate=0.1):
     return selfie  # fallback
 
 
-def crossover_selfies(parent1, parent2):
-    tokens1 = list(sf.split_selfies(parent1))
-    tokens2 = list(sf.split_selfies(parent2))
-
-    if len(tokens1) < 2 or len(tokens2) < 2:
-        return parent1, parent2
-
-    pt1 = np.random.randint(1, len(tokens1))
-    pt2 = np.random.randint(1, len(tokens2))
-
-    child1 = ''.join(tokens1[:pt1] + tokens2[pt2:])
-    child2 = ''.join(tokens2[:pt2] + tokens1[pt1:])
-
-    # Only return if both decode to meaningful SMILES
-    return child1, child2
-
-
-
 def get_similarity(smiles1, smiles2=None):
     mol1 = Chem.MolFromSmiles(smiles1)
-    if mol1 is None:
+    if not mol1:
         return 0.0
-    fp1 = AllChem.GetMorganFingerprintAsBitVect(mol1, radius=2, nBits=2048)
-    fp2 = REFERENCE_FP if smiles2 is None else AllChem.GetMorganFingerprintAsBitVect(Chem.MolFromSmiles(smiles2), radius=2, nBits=2048)
+    fp1 = AllChem.GetMorganFingerprintAsBitVect(mol1, 2, 2048)
+    fp2 = REFERENCE_FP if smiles2 is None else AllChem.GetMorganFingerprintAsBitVect(Chem.MolFromSmiles(smiles2), 2, 2048)
     return DataStructs.TanimotoSimilarity(fp1, fp2)
-
 
 def get_objectives(smiles):
     mol = Chem.MolFromSmiles(smiles)
@@ -90,5 +80,5 @@ def get_objectives(smiles):
         return [0.0, 1.0, 0.0]
     qed = QED.qed(mol)
     sa = sascorer.calculateScore(mol) / 10
-    similarity = get_similarity(smiles)
-    return [qed, sa, similarity]
+    sim = get_similarity(smiles)
+    return [qed, sa, sim]
