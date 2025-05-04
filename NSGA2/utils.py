@@ -48,22 +48,16 @@ def crossover_selfies(parent1, parent2):
     return c1, c2
 
 
-def mutate_selfies(selfie, mutation_rate=0.1):
+def insert_token_mutation(selfie, mutation_rate=0.1):
     tokens = list(sf.split_selfies(selfie))
     alphabet = list(sf.get_semantic_robust_alphabet())
 
-    if len(tokens) == 0 or np.random.rand() > mutation_rate:
-        return selfie
+    if np.random.rand() < mutation_rate:
+        insert_token = np.random.choice(alphabet)
+        insert_pos = np.random.randint(0, len(tokens)+1)
+        tokens.insert(insert_pos, insert_token)
 
-    for _ in range(3):  # Try up to 3 times
-        pos = np.random.randint(0, len(tokens))
-        new_token = np.random.choice(alphabet)
-        tokens[pos] = new_token
-        mutated = ''.join(tokens)
-        if decode_selfies(mutated):
-            return mutated
-
-    return selfie  # fallback
+    return "".join(tokens)
 
 
 def get_similarity(smiles1, smiles2=None):

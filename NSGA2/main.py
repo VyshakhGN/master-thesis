@@ -7,7 +7,7 @@ from pymoo.termination import get_termination
 
 from utils import (
     load_smiles_from_file, decode_selfies,
-    crossover_selfies, mutate_selfies
+    crossover_selfies, insert_token_mutation
 )
 from problem import MolecularOptimization
 
@@ -18,7 +18,7 @@ def evolve_population(selfies_list, generations, pop_size, crossover_rate, mutat
         while len(new_gen) < pop_size:
             p1, p2 = np.random.choice(population, 2, replace=False)
             c1, c2 = crossover_selfies(p1, p2) if np.random.rand() < crossover_rate else (p1, p2)
-            c1, c2 = mutate_selfies(c1, mutation_rate), mutate_selfies(c2, mutation_rate)
+            c1, c2 = insert_token_mutation(c1, mutation_rate), insert_token_mutation(c2, mutation_rate)
             for child in [c1, c2]:
                 smiles = decode_selfies(child)
                 if smiles:
@@ -43,7 +43,7 @@ def main():
         pool = selfies[:]
         while len(pool) < DEFAULT_POP_SIZE:
             seed_selfie = random.choice(selfies)
-            mutated = mutate_selfies(seed_selfie, mutation_rate=0.9)
+            mutated = insert_token_mutation(seed_selfie, mutation_rate=0.9)
             if decode_selfies(mutated):
                 pool.append(mutated)
         selfies = pool
