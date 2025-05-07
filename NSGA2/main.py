@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.optimize import minimize
 from pymoo.termination import get_termination
+from utils import get_objectives
 
 from utils import (
     load_smiles_from_file, decode_selfies,
@@ -75,18 +76,13 @@ def main():
     plt.title("Pareto Front")
     plt.show()
 
-    print("\nTop 10 Molecules (by QED):")
-    seen = set()
-    count = 0
-    for i in qed_vals.argsort()[::-1]:
-        smi = evolved_smiles[int(X[i][0])]
-        if smi not in seen:
-            count += 1
-            print(
-                f"{count}. SMILES: {smi} | QED: {qed_vals[i]:.3f} | SA: {sa_vals[i]:.3f} | Similarity: {sim_vals[i]:.3f}")
-            seen.add(smi)
-        if count >= 10:
-            break
+    print("\nTop 10 Unique Molecules (by QED):")
+    unique_smiles = list(set(evolved_smiles))
+    scored = [(smi, *get_objectives(smi)) for smi in unique_smiles]
+    scored.sort(key=lambda x: -x[1])  # sort by QED descending
+
+    for i, (smi, qed, sa, sim) in enumerate(scored[:10], 1):
+        print(f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | Similarity: {sim:.3f}")
 
     print(f"\nTotal unique molecules in Pareto front: {len(set(evolved_smiles))}")
 
