@@ -1,5 +1,4 @@
 import selfies as sf
-import numpy as np
 from rdkit import Chem
 from rdkit.Chem import QED, AllChem, DataStructs
 import sascorer
@@ -31,34 +30,6 @@ def load_smiles_from_file(path):
         smiles = [line.strip() for line in f if line.strip()]
     valid = [encode_smiles(smi) for smi in smiles]
     return [s for s in valid if s]
-
-def crossover_selfies(parent1, parent2):
-    t1 = list(sf.split_selfies(parent1))
-    t2 = list(sf.split_selfies(parent2))
-
-    if len(t1) < 2 or len(t2) < 2:
-        return parent1, parent2
-
-    pt1 = np.random.randint(1, len(t1))
-    pt2 = np.random.randint(1, len(t2))
-
-    c1 = ''.join(t1[:pt1] + t2[pt2:])
-    c2 = ''.join(t2[:pt2] + t1[pt1:])
-
-    return c1, c2
-
-
-def insert_token_mutation(selfie, mutation_rate=0.1):
-    tokens = list(sf.split_selfies(selfie))
-    alphabet = list(sf.get_semantic_robust_alphabet())
-
-    if np.random.rand() < mutation_rate:
-        insert_token = np.random.choice(alphabet)
-        insert_pos = np.random.randint(0, len(tokens)+1)
-        tokens.insert(insert_pos, insert_token)
-
-    return "".join(tokens)
-
 
 def get_similarity(smiles1, smiles2=None):
     mol1 = Chem.MolFromSmiles(smiles1)

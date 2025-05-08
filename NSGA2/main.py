@@ -1,67 +1,44 @@
-import numpy as np
 import random
 import matplotlib.pyplot as plt
+import numpy as np
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.optimize import minimize
 from pymoo.termination import get_termination
-from utils import get_objectives
-
-from utils import (
-    load_smiles_from_file, decode_selfies,
-    crossover_selfies, insert_token_mutation
-)
+from utils import load_smiles_from_file, decode_selfies, get_objectives
 from problem import MolecularOptimization
-
-def evolve_population(selfies_list, generations, pop_size, crossover_rate, mutation_rate):
-    population = selfies_list[:]
-    for _ in range(generations):
-        new_gen = []
-        while len(new_gen) < pop_size:
-            p1, p2 = np.random.choice(population, 2, replace=False)
-            c1, c2 = crossover_selfies(p1, p2) if np.random.rand() < crossover_rate else (p1, p2)
-            c1, c2 = insert_token_mutation(c1, mutation_rate), insert_token_mutation(c2, mutation_rate)
-            for child in [c1, c2]:
-                smiles = decode_selfies(child)
-                if smiles:
-                    new_gen.append(child)
-                if len(new_gen) >= pop_size:
-                    break
-        population = new_gen
-    return [decode_selfies(s) for s in population if decode_selfies(s)]
+from operators import MySampling, MyCrossover, MyMutation
 
 def main():
     FILE = "zinc_subset.txt"
-    NGEN_EA = 50
-    NGEN_NS = 100
-    CROSSOVER = 0.9
-    MUTATION = 0.1
-    DEFAULT_POP_SIZE = 200
+    NGEN = 100
+    POP_SIZE = 200
+    CROSSOVER_PROB = 0.9
+    MUTATION_RATE = 0.1
     seed = random.randint(0, 10000)
 
     selfies = load_smiles_from_file(FILE)
-    if len(selfies) < DEFAULT_POP_SIZE:
-        print(f"Expanding {len(selfies)} valid SELFIES to {DEFAULT_POP_SIZE} using mutation...")
+    if len(selfies) < POP_SIZE:
+        print(f"Expanding {len(selfies)} valid SELFIES to {POP_SIZE} using mutation...")
+        mutator = MyMutation(mutation_rate=0.9)
         pool = selfies[:]
-        while len(pool) < DEFAULT_POP_SIZE:
+        while len(pool) < POP_SIZE:
             seed_selfie = random.choice(selfies)
-            mutated = insert_token_mutation(seed_selfie, mutation_rate=0.9)
+            mutated = mutator._do(None, np.array([[seed_selfie]], dtype=object))[0, 0]
             if decode_selfies(mutated):
                 pool.append(mutated)
         selfies = pool
     else:
-        selfies = selfies[:DEFAULT_POP_SIZE]
+        selfies = selfies[:POP_SIZE]
 
-    POP_SIZE = DEFAULT_POP_SIZE
-
-    evolved_smiles = evolve_population(selfies, NGEN_EA, POP_SIZE, CROSSOVER, MUTATION)
-
-    if len(evolved_smiles) < 10:
-        print("Too few molecules.")
-        return
-
-    problem = MolecularOptimization(evolved_smiles)
-    algorithm = NSGA2(pop_size=len(evolved_smiles))
-    termination = get_termination("n_gen", NGEN_NS)
+    problem = MolecularOptimization(selfies)
+    algorithm = NSGA2(
+        pop_size=POP_SIZE,
+        sampling=MySampling(selfies),
+        crossover=MyCrossover(),
+        mutation=MyMutation(mutation_rate=MUTATION_RATE),
+        eliminate_duplicates=False
+    )
+    termination = get_termination("n_gen", NGEN)
 
     result = minimize(problem, algorithm, termination, seed=seed, verbose=True)
     X, F = result.X, result.F
@@ -77,15 +54,14 @@ def main():
     plt.show()
 
     print("\nTop 10 Unique Molecules (by QED):")
-    unique_smiles = list(set(evolved_smiles))
+    unique_smiles = list(set([decode_selfies(s[0]) for s in X if decode_selfies(s[0])]))
     scored = [(smi, *get_objectives(smi)) for smi in unique_smiles]
-    scored.sort(key=lambda x: -x[1])  # sort by QED descending
+    scored.sort(key=lambda x: -x[1])  # Sort by QED descending
 
     for i, (smi, qed, sa, sim) in enumerate(scored[:10], 1):
         print(f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | Similarity: {sim:.3f}")
 
-    print(f"\nTotal unique molecules in Pareto front: {len(set(evolved_smiles))}")
-
+    print(f"\nTotal unique molecules in Pareto front: {len(unique_smiles)}")
 
 if __name__ == "__main__":
     main()
