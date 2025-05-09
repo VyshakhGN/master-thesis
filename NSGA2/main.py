@@ -16,7 +16,7 @@ def main():
     MUTATION_RATE = 0.1
     seed = random.randint(0, 10000)
 
-    selfies = load_smiles_from_file(FILE)
+    selfies = load_smiles_from_file(FILE, max_count=POP_SIZE)
     if len(selfies) < POP_SIZE:
         print(f"Expanding {len(selfies)} valid SELFIES to {POP_SIZE} using mutation...")
         mutator = MyMutation(mutation_rate=0.9)
