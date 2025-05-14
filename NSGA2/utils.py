@@ -3,7 +3,7 @@ from rdkit import Chem
 from rdkit.Chem import QED, AllChem, DataStructs, Descriptors, Lipinski
 import sascorer
 
-REFERENCE_SMILES = "CCO"  # Replace this with your target/reference molecule if needed
+REFERENCE_SMILES = "COc1cc2ncnc(Nc3ccc(F)c(Cl)c3)c2cc1OC"
 REFERENCE_MOL = Chem.MolFromSmiles(REFERENCE_SMILES)
 REFERENCE_FP = AllChem.GetMorganFingerprintAsBitVect(REFERENCE_MOL, 2, 2048)
 
