@@ -1,12 +1,13 @@
 import selfies as sf
 from rdkit import Chem
-from rdkit.Chem import QED, AllChem, DataStructs, Descriptors, Lipinski
+from rdkit.Chem import QED, AllChem, DataStructs
 import sascorer
+from guacamol.benchmark_suites import goal_directed_benchmark_suite
+from guacamol.utils.chemistry import canonicalize
 
-REFERENCE_SMILES = "COc1cc2ncnc(Nc3ccc(F)c(Cl)c3)c2cc1OC"
-REFERENCE_MOL = Chem.MolFromSmiles(REFERENCE_SMILES)
-REFERENCE_FP = AllChem.GetMorganFingerprintAsBitVect(REFERENCE_MOL, 2, 2048)
-
+# Load the GuacaMol Cobimetinib MPO task
+benchmark = goal_directed_benchmark_suite(version_name="v1")
+task = [b for b in benchmark if b.name == "Cobimetinib MPO"][0]
 
 def decode_selfies(selfie):
     try:
@@ -18,7 +19,6 @@ def decode_selfies(selfie):
     except:
         return None
 
-
 def encode_smiles(smiles):
     try:
         selfie = sf.encoder(smiles)
@@ -27,29 +27,19 @@ def encode_smiles(smiles):
     except:
         return None
 
-
-def get_similarity(smiles1, smiles2=None):
-    mol1 = Chem.MolFromSmiles(smiles1)
-    if not mol1:
-        return 0.0
-    fp1 = AllChem.GetMorganFingerprintAsBitVect(mol1, 2, 2048)
-    fp2 = REFERENCE_FP if smiles2 is None else AllChem.GetMorganFingerprintAsBitVect(
-        Chem.MolFromSmiles(smiles2), 2, 2048)
-    return DataStructs.TanimotoSimilarity(fp1, fp2)
-
-
 def get_objectives(smiles):
     mol = Chem.MolFromSmiles(smiles)
     if not mol:
-        return [0.0, 1.0, 0.0]
+        return [0.0, 1.0, 0.0, 0.0]
+
     qed = QED.qed(mol)
-    sa = sascorer.calculateScore(mol) / 10  # Normalize to [0,1]
-    sim = get_similarity(smiles)
-    return [qed, sa, sim]
+    sa = sascorer.calculateScore(mol) / 10  # Normalize SA
+    mpo_score = task.objective.score(canonicalize(smiles))  # GuacaMol MPO composite score
 
+    return [qed, sa, mpo_score, 1 - sa]  # Using SA + inverse SA to assist spread
 
-# Drug-likeness and synthetic filters
 def passes_drug_filters(mol):
+    from rdkit.Chem import Descriptors, Lipinski
     mw = Descriptors.MolWt(mol)
     logp = Descriptors.MolLogP(mol)
     h_donors = Lipinski.NumHDonors(mol)
@@ -65,7 +55,6 @@ def passes_drug_filters(mol):
         rot_bonds <= 10 and
         heavy_atoms >= 5
     )
-
 
 def load_smiles_from_file(path, max_count=200):
     with open(path, "r") as f:

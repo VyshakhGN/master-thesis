@@ -4,9 +4,16 @@ import numpy as np
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.optimize import minimize
 from pymoo.termination import get_termination
+from pymoo.visualization.pcp import PCP
 from utils import load_smiles_from_file, decode_selfies, get_objectives
 from problem import MolecularOptimization
 from operators import MySampling, MyCrossover, MyMutation
+from pymoo.core.duplicate import DuplicateElimination
+
+class SelfiesDuplicateEliminator(DuplicateElimination):
+    def is_equal(self, a, b):
+        return a[0] == b[0]  # simple string comparison; or decode and compare SMILES
+
 
 def main():
     FILE = "zinc_subset.txt"
@@ -36,32 +43,33 @@ def main():
         sampling=MySampling(selfies),
         crossover=MyCrossover(),
         mutation=MyMutation(mutation_rate=MUTATION_RATE),
-        eliminate_duplicates=False
+        eliminate_duplicates=SelfiesDuplicateEliminator()
     )
     termination = get_termination("n_gen", NGEN)
 
     result = minimize(problem, algorithm, termination, seed=seed, verbose=True)
+
+    # --- Extract and Plot Objectives ---
     X, F = result.X, result.F
-    qed_vals, sa_vals, sim_vals = -F[:, 0], F[:, 1], -F[:, 2]
+    qed_vals, sa_vals, mpo_vals, inv_sa_vals = -F[:, 0], F[:, 1], -F[:, 2], -F[:, 3]
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(qed_vals, sa_vals, sim_vals)
-    ax.set_xlabel("QED")
-    ax.set_ylabel("SA")
-    ax.set_zlabel("Similarity")
-    plt.title("Pareto Front")
-    plt.show()
+    # Parallel Coordinate Plot
+    fig = plt.figure(figsize=(10, 6))
+    pcp = PCP(title="Parallel Coordinate Plot of Pareto Front", axis_labels=["QED", "SA", "MPO", "1 - SA"])
+    pcp.add(F)
+    pcp.show()
 
+    # --- Top Molecules by QED ---
     print("\nTop 10 Unique Molecules (by QED):")
     unique_smiles = list(set([decode_selfies(s[0]) for s in X if decode_selfies(s[0])]))
     scored = [(smi, *get_objectives(smi)) for smi in unique_smiles]
     scored.sort(key=lambda x: -x[1])  # Sort by QED descending
 
-    for i, (smi, qed, sa, sim) in enumerate(scored[:10], 1):
-        print(f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | Similarity: {sim:.3f}")
+    for i, (smi, qed, sa, mpo, inv_sa) in enumerate(scored[:10], 1):
+        print(f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | MPO: {mpo:.3f}")
 
     print(f"\nTotal unique molecules in Pareto front: {len(unique_smiles)}")
+
 
 if __name__ == "__main__":
     main()
