@@ -2,6 +2,7 @@ import selfies as sf
 from rdkit import Chem
 from rdkit.Chem import QED, AllChem, DataStructs
 import sascorer
+from rdkit.Chem import Descriptors, Lipinski
 from guacamol.benchmark_suites import goal_directed_benchmark_suite
 from guacamol.utils.chemistry import canonicalize
 
@@ -30,16 +31,17 @@ def encode_smiles(smiles):
 def get_objectives(smiles):
     mol = Chem.MolFromSmiles(smiles)
     if not mol:
-        return [0.0, 1.0, 0.0, 0.0]
+        return [0.0, 1.0, 0.0, 0.0, 1.0]
 
     qed = QED.qed(mol)
-    sa = sascorer.calculateScore(mol) / 10  # Normalize SA
-    mpo_score = task.objective.score(canonicalize(smiles))  # GuacaMol MPO composite score
+    sa = sascorer.calculateScore(mol) / 10
+    mpo_score = task.objective.score(canonicalize(smiles))
+    inv_sa = 1 - sa
+    rtb = Lipinski.NumRotatableBonds(mol) / 10  # Normalize to [0, 1]
 
-    return [qed, sa, mpo_score, 1 - sa]  # Using SA + inverse SA to assist spread
+    return [qed, sa, mpo_score, inv_sa, rtb]
 
 def passes_drug_filters(mol):
-    from rdkit.Chem import Descriptors, Lipinski
     mw = Descriptors.MolWt(mol)
     logp = Descriptors.MolLogP(mol)
     h_donors = Lipinski.NumHDonors(mol)

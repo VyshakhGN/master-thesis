@@ -55,7 +55,10 @@ def main():
 
     # Parallel Coordinate Plot
     fig = plt.figure(figsize=(10, 6))
-    pcp = PCP(title="Parallel Coordinate Plot of Pareto Front", axis_labels=["QED", "SA", "MPO", "1 - SA"])
+    pcp = PCP(
+        title="5D Pareto Front",
+        axis_labels=["QED", "SA", "MPO", "1 - SA", "RTB"]
+    )
     pcp.add(F)
     pcp.show()
 
@@ -65,8 +68,8 @@ def main():
     scored = [(smi, *get_objectives(smi)) for smi in unique_smiles]
     scored.sort(key=lambda x: -x[1])  # Sort by QED descending
 
-    for i, (smi, qed, sa, mpo, inv_sa) in enumerate(scored[:10], 1):
-        print(f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | MPO: {mpo:.3f}")
+    for i, (smi, qed, sa, mpo, inv_sa, rtb) in enumerate(scored[:10], 1):
+        print(f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | MPO: {mpo:.3f} | RTB: {rtb:.2f}")
 
     print(f"\nTotal unique molecules in Pareto front: {len(unique_smiles)}")
 
