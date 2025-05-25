@@ -11,4 +11,3 @@ class MolecularOptimization(ElementwiseProblem):
         objectives = get_objectives(selfie)
         # Minimize SA, maximize QED and MPO score, plus diversity via -SA
         out["F"] = [-objectives[0], objectives[1], -objectives[2], -objectives[3], objectives[4]]
-
