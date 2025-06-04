@@ -5,15 +5,30 @@ from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.optimize import minimize
 from pymoo.termination import get_termination
 from pymoo.visualization.pcp import PCP
+from rdkit import Chem
 from utils import load_smiles_from_file, decode_selfies, get_objectives
 from problem import MolecularOptimization
 from operators import MySampling, MyCrossover, MyMutation
 from pymoo.core.duplicate import DuplicateElimination
 
 class SelfiesDuplicateEliminator(DuplicateElimination):
-    def is_equal(self, a, b):
-        return a[0] == b[0]  # simple string comparison; or decode and compare SMILES
 
+    def _canonical_smiles(self, selfie):
+        smi = decode_selfies(selfie)
+        if smi is None:
+            return None
+        mol = Chem.MolFromSmiles(smi)
+        if mol is None:
+            return None
+        return Chem.MolToSmiles(mol, canonical=True)   # deterministic
+
+    def is_equal(self, a, b):
+        smi_a = self._canonical_smiles(a[0])
+        smi_b = self._canonical_smiles(b[0])
+        # If either fails to decode, fall back to old behaviour
+        if smi_a is None or smi_b is None:
+            return a[0] == b[0]
+        return smi_a == smi_b
 
 def main():
     FILE = "zinc_subset.txt"
