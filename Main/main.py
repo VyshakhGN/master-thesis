@@ -14,10 +14,18 @@ NGEN = 100
 MUTATION_RATE = 0.1
 # ----------------------------------------------
 
+# --- temporary baseline settings to match RL run ---
+BASELINE_PICKS = 100      # must equal PICKS above
+BASELINE_GEN   = 30
+# ---------------------------------------------------
+
+# ... inside main()
+
 
 def build_seed_population(file_path: str, pop_size: int) -> list[str]:
     """Load/expand SELFIES until we have exactly `pop_size` unique entries."""
-    selfies = load_smiles_from_file(file_path, max_count=pop_size)
+    selfies_pool = load_smiles_from_file(file_path, max_count=5000)
+    selfies = random.sample(selfies_pool, pop_size)
 
     if len(selfies) < pop_size:
         print(f"Expanding {len(selfies)} valid SELFIES to {pop_size} via mutation …")
@@ -36,13 +44,13 @@ def build_seed_population(file_path: str, pop_size: int) -> list[str]:
 
 
 def main():
-    seed_selfies = build_seed_population(FILE, POP_SIZE)
+    seed_selfies = build_seed_population(FILE, BASELINE_PICKS)
 
     # ---------- evolutionary episode ----------
     hv, result = run_nsga(
         seed_selfies,
-        n_gen=NGEN,
-        pop_size=POP_SIZE,
+        n_gen=BASELINE_GEN,
+        pop_size=BASELINE_PICKS,
         mutation_rate=MUTATION_RATE,
         return_full=True,
     )
