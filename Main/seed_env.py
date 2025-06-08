@@ -64,17 +64,21 @@ class SeedEnvClean(gym.Env):
         self.selected.append(action)
         qed, sa = self.props[action]
         self.sum_qed += float(qed)
-        self.sum_sa  += float(sa)
+        self.sum_sa += float(sa)
 
         done = len(self.selected) == self.PICKS
-        reward = 0.0
 
-        if done:
+        # --- NEW: reward shaping ---
+        if not done:
+            # Encourage QED and discourage SA (high SA = hard to synthesize)
+            reward = (qed + (1.0 - sa)) / 2.0
+        else:
             selfies = [self.pool[i] for i in self.selected]
             reward = run_nsga(selfies, n_gen=self.n_gen, pop_size=self.PICKS)
             print(f"[env] Done. HV reward = {reward:.4f}")
 
         return self._get_obs(), reward, done, False, {}
+
 
 def load_env(picks=200, n_gen=30):
     selfies, props = build_filtered_pool()
