@@ -49,7 +49,8 @@ def main():
 
     print("\n=== Evaluation ===")
     print("Rewards:", rewards)
-    print("Mean HV:", np.mean(rewards))
+    print(f"FINAL_HV: {np.mean(rewards):.4f}")
+
 
 if __name__ == "__main__":
     os.makedirs(RUNS_DIR, exist_ok=True)

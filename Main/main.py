@@ -52,6 +52,7 @@ def main():
         random_seed=42
     )
     print(f"\nHyper-volume reward (episode): {hv:.4f}")
+    print(f"FINAL_HV: {hv:.4f}")
 
     # ---------- extract objectives ----------
     X, F = result.X, result.F
