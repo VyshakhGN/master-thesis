@@ -3,6 +3,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import pickle
+from utils import get_objectives
 from evolution import run_nsga
 
 class SimpleSeedEnv(gym.Env):
@@ -48,7 +49,16 @@ class SimpleSeedEnv(gym.Env):
         if done:
             indices = self.fixed_idx + self.selected
             selfies = [self.pool[i] for i in indices]
-            reward = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices),random_seed=42)
-            print(f"[env] Done. HV reward = {reward:.4f}")
+            hv = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices), random_seed=42)
+
+            # NEW: QED bonus calculation
+            selected_smiles = [self.pool[i] for i in self.selected]
+            qed_scores = [get_objectives(smi)[0] for smi in selected_smiles if get_objectives(smi)]
+            qed_bonus = np.mean(qed_scores) if qed_scores else 0.0
+
+            λ = 0.3  # weight of QED bonus
+            reward = hv + λ * qed_bonus
+
+            print(f"[env] Done. HV = {hv:.4f}, QED = {qed_bonus:.4f}, Total Reward = {reward:.4f}")
 
         return self._obs(), reward, done, False, {}
