@@ -48,7 +48,7 @@ class SimpleSeedEnv(gym.Env):
         if done:
             indices = self.fixed_idx + self.selected
             selfies = [self.pool[i] for i in indices]
-            reward = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices))
+            reward = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices),random_seed=42)
             print(f"[env] Done. HV reward = {reward:.4f}")
 
         return self._obs(), reward, done, False, {}

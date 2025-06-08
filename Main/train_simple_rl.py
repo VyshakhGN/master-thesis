@@ -36,7 +36,7 @@ def main():
 
     # Evaluate
     rewards = []
-    for _ in range(2):
+    for _ in range(3):
         obs, _ = env.reset()
         done = False
         while not done:

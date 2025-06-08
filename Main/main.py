@@ -49,6 +49,7 @@ def main():
         pop_size=POP_SIZE,
         mutation_rate=MUTATION_RATE,
         return_full=True,
+        random_seed=42
     )
     print(f"\nHyper-volume reward (episode): {hv:.4f}")
 
