@@ -7,6 +7,9 @@ from operators import MyMutation
 from utils import load_smiles_from_file, decode_selfies, get_objectives
 from evolution import run_nsga  # << new helper with duplicate eliminator
 
+random.seed(38)
+np.random.seed(38)
+
 # ------------- run parameters -----------------
 FILE = "zinc_subset.txt"
 
@@ -24,27 +27,20 @@ MUTATION_RATE = 0.1
 
 
 def build_seed_population(file_path: str, pop_size: int) -> list[str]:
-    """Load/expand SELFIES until we have exactly `pop_size` unique entries."""
-    selfies = load_smiles_from_file(file_path, max_count=pop_size)
-
-    if len(selfies) < pop_size:
-        print(f"Expanding {len(selfies)} valid SELFIES to {pop_size} via mutation …")
-        mutator = MyMutation(mutation_rate=0.9)
-        pool = selfies[:]
-        while len(pool) < pop_size:
-            seed_selfie = random.choice(selfies)
-            mutated = mutator._do(None, np.array([[seed_selfie]], dtype=object))[0, 0]
-            if decode_selfies(mutated):  # keep only chemically valid
-                pool.append(mutated)
-        selfies = pool
-    else:
-        selfies = selfies[:pop_size]
-
-    return selfies
+    """
+    Sample `pop_size` molecules from the same filtered pool used by RL.
+    Ensures fair comparison by using the same filtered input space.
+    """
+    full_pool = load_smiles_from_file(file_path, max_count=1000)
+    if len(full_pool) < pop_size:
+        raise ValueError(f"Not enough molecules in pool ({len(full_pool)}) to sample {pop_size}")
+    return random.sample(full_pool, pop_size)
 
 
 def main():
-    seed_selfies = build_seed_population(FILE, POP_SIZE)
+    from utils import load_smiles_from_file
+    pool = load_smiles_from_file(FILE, max_count=1000)
+    seed_selfies = pool[:120]
 
     # ---------- evolutionary episode ----------
     hv, result = run_nsga(

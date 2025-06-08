@@ -1,45 +1,38 @@
-import os
-import pickle
-import numpy as np
+# train_simple_rl.py
+import pickle, numpy as np, os
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.wrappers import ActionMasker
-from seed_env import load_env
+from simplified_seed_env import SimpleSeedEnv
 
-DEBUG = True  # Set to False for full run
-
+DEBUG = True
 if DEBUG:
-    PICKS = 150
-    N_GEN = 20
-    TOTAL_STEPS = 7500
-    SAVE_EVERY = 2500
+    POOL_FILE = "pool_with_props.pkl"
+    K = 20
+    NGEN = 20
+    TOTAL_STEPS = 5000
 else:
-    PICKS = 200
-    N_GEN = 30
+    K = 30
+    NGEN = 50
     TOTAL_STEPS = 20000
-    SAVE_EVERY = 10000
 
 RUNS_DIR = "runs"
 
+def load_env():
+    pool, _ = pickle.load(open(POOL_FILE, "rb"))
+    fixed_100 = pool[:100]
+    fixed_idx = list(range(100))
+    return SimpleSeedEnv(pool, fixed_idx, K=K, n_gen=NGEN)
 
-
-def env_mask(env):
+def mask_fn(env):
     return env.available.astype(bool)[None, :]
 
 def main():
-    base_env = load_env(picks=PICKS, n_gen=N_GEN)
-    env = ActionMasker(base_env, env_mask)
+    env = load_env()
+    env = ActionMasker(env, mask_fn)
 
-    model = MaskablePPO(
-        "MlpPolicy",
-        env,
-        verbose=1,
-        n_steps=256,
-        batch_size=256,
-        tensorboard_log=os.path.join(RUNS_DIR, "tb")
-    )
-
+    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=256, batch_size=256,
+                        tensorboard_log=os.path.join(RUNS_DIR, "tb"))
     model.learn(total_timesteps=TOTAL_STEPS)
-    model.save(os.path.join(RUNS_DIR, "ppo_seedenv"))
 
     # Evaluate
     rewards = []
@@ -48,13 +41,11 @@ def main():
         done = False
         while not done:
             valid = np.flatnonzero(env.env.available)
-            if len(valid) == 0:
-                break
             action, _ = model.predict(obs, deterministic=True)
             if env.env.available[action] == 0:
                 action = int(np.random.choice(valid))
             obs, reward, done, _, _ = env.step(action)
-        rewards.append(float(reward))
+        rewards.append(reward)
 
     print("\n=== Evaluation ===")
     print("Rewards:", rewards)
