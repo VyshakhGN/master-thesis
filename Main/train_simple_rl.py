@@ -1,4 +1,4 @@
-# train_simple_rl.py
+
 import pickle, numpy as np, os
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.wrappers import ActionMasker
@@ -34,7 +34,6 @@ def main():
                         tensorboard_log=os.path.join(RUNS_DIR, "tb"))
     model.learn(total_timesteps=TOTAL_STEPS)
 
-    # Evaluate
     rewards = []
     for _ in range(3):
         obs, _ = env.reset()

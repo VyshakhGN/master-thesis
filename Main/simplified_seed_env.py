@@ -1,4 +1,4 @@
-# simplified_seed_env.py
+
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
@@ -7,10 +7,7 @@ from utils import get_objectives
 from evolution import run_nsga
 
 class SimpleSeedEnv(gym.Env):
-    """
-    RL agent selects K molecules from pool (excluding fixed set).
-    Final reward is the NSGA-II hypervolume using fixed + selected.
-    """
+
     metadata = {"render.modes": []}
 
     def __init__(self, pool, fixed_idx, K=20, n_gen=20):
@@ -51,12 +48,12 @@ class SimpleSeedEnv(gym.Env):
             selfies = [self.pool[i] for i in indices]
             hv = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices), random_seed=42)
 
-            # NEW: QED bonus calculation
+            # QED bonus calculation
             selected_smiles = [self.pool[i] for i in self.selected]
             qed_scores = [get_objectives(smi)[0] for smi in selected_smiles if get_objectives(smi)]
             qed_bonus = np.mean(qed_scores) if qed_scores else 0.0
 
-            λ = 0.3  # weight of QED bonus
+            λ = 0.3
             reward = hv + λ * qed_bonus
 
             print(f"[env] Done. HV = {hv:.4f}, QED = {qed_bonus:.4f}, Total Reward = {reward:.4f}")

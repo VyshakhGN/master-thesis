@@ -1,9 +1,9 @@
-# make_fixed_seeds.py
+
 import pickle
 import random
 from utils import load_smiles_from_file
 
-POOL_FILE   = "zinc_subset.txt"   # your ZINC slice
+POOL_FILE   = "zinc_subset.txt"
 POOL_SIZE   = 5000
 FIXED_COUNT = 100
 OUT_FILE    = "fixed_seeds.pkl"

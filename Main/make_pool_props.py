@@ -1,10 +1,10 @@
-# make_pool_props.py
+
 import pickle
 import numpy as np
 from utils import load_smiles_from_file, get_objectives
 
 POOL_FILE = "zinc_subset.txt"
-N_POOL = 1000  # Keep consistent with RL config
+N_POOL = 1000
 
 def main():
     smiles = load_smiles_from_file(POOL_FILE, max_count=N_POOL)

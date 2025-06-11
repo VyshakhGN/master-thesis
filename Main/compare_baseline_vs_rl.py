@@ -3,7 +3,7 @@ import re
 import numpy as np
 import sys
 
-PYTHON_EXEC = sys.executable  # safer than hardcoding
+PYTHON_EXEC = sys.executable
 
 def run_script(filename, pattern="FINAL_HV: ([0-9.]+)", repeat=5):
     values = []
@@ -18,7 +18,7 @@ def run_script(filename, pattern="FINAL_HV: ([0-9.]+)", repeat=5):
 
             matches = re.findall(pattern, output)
             if matches:
-                hv = float(matches[-1])  # pick the last HV
+                hv = float(matches[-1])
                 print(f" → HV = {hv}")
                 values.append(hv)
             else:
@@ -27,15 +27,12 @@ def run_script(filename, pattern="FINAL_HV: ([0-9.]+)", repeat=5):
             print(" → Timeout.")
     return values
 
-# Run RL
 print("=== Running train_simple_rl.py 5 times ===")
 rl_hvs = run_script("train_simple_rl.py", repeat=5)
 
-# Run main.py
 print("\n=== Running main.py 5 times ===")
 main_hvs = run_script("main.py", repeat=5)
 
-# Final summary
 print("\n======== FINAL COMPARISON ========")
 def summarize(name, values):
     if values:

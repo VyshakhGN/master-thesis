@@ -6,7 +6,6 @@ from rdkit.Chem import Descriptors, Lipinski
 from guacamol.benchmark_suites import goal_directed_benchmark_suite
 from guacamol.utils.chemistry import canonicalize
 
-# Load the GuacaMol Cobimetinib MPO task
 benchmark = goal_directed_benchmark_suite(version_name="v1")
 task = [b for b in benchmark if b.name == "Cobimetinib MPO"][0]
 
