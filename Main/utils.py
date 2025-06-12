@@ -38,7 +38,7 @@ def get_objectives(smiles):
     inv_sa = 1 - sa
     rtb = Lipinski.NumRotatableBonds(mol) / 10  # Normalize to [0, 1]
 
-    return [qed, sa, mpo_score, inv_sa, rtb]
+    return [qed, sa, mpo_score, rtb]
 
 def passes_drug_filters(mol):
     mw = Descriptors.MolWt(mol)

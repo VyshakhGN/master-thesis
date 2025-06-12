@@ -65,7 +65,7 @@ def run_nsga(
         verbose=False,
     )
 
-    ref_point = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
+    ref_point = np.array([1.0, 1.0, 1.0, 1.0])
     hv_reward = HV(ref_point=ref_point)(result.F)
 
     return (hv_reward, result) if return_full else hv_reward

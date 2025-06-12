@@ -59,7 +59,7 @@ def main():
 
     # ---------- extract objectives ----------
     X, F = result.X, result.F
-    qed_vals, sa_vals, mpo_vals, inv_sa_vals = -F[:, 0], F[:, 1], -F[:, 2], -F[:, 3]
+    qed_vals, sa_vals, mpo_vals, rtb_vals = -F[:, 0], F[:, 1], -F[:, 2], F[:, 3]
 
     # ---------- Parallel-coordinate plot ----------
     from pymoo.visualization.pcp import PCP
@@ -67,7 +67,7 @@ def main():
     fig = plt.figure(figsize=(10, 6))
     pcp = PCP(
         title="5D Pareto Front",
-        axis_labels=["QED", "SA", "MPO", "1-SA", "RTB"],
+        axis_labels=["QED", "SA", "MPO", "RTB"],
     )
     pcp.add(F)
     pcp.show()
@@ -82,7 +82,7 @@ def main():
     scored = [(smi, *get_objectives(smi)) for smi in unique_smiles]
     scored.sort(key=lambda x: -x[1])  # sort descend by QED
 
-    for i, (smi, qed, sa, mpo, inv_sa, rtb) in enumerate(scored[:10], 1):
+    for i, (smi, qed, sa, mpo,rtb) in enumerate(scored[:10], 1):
         print(
             f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | "
             f"MPO: {mpo:.3f} | RTB: {rtb:.2f}"
