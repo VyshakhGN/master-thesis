@@ -30,12 +30,11 @@ def encode_smiles(smiles):
 def get_objectives(smiles):
     mol = Chem.MolFromSmiles(smiles)
     if not mol:
-        return [0.0, 1.0, 0.0, 0.0, 1.0]
+        return [0.0, 1.0, 0.0, 0.0]
 
     qed = QED.qed(mol)
     sa = sascorer.calculateScore(mol) / 10
     mpo_score = task.objective.score(canonicalize(smiles))
-    inv_sa = 1 - sa
     rtb = Lipinski.NumRotatableBonds(mol) / 10  # Normalize to [0, 1]
 
     return [qed, sa, mpo_score, rtb]

@@ -1,4 +1,4 @@
-
+# train_simple_rl.py
 import pickle, numpy as np, os
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.wrappers import ActionMasker
@@ -18,10 +18,10 @@ else:
 RUNS_DIR = "runs"
 
 def load_env():
-    pool, _ = pickle.load(open(POOL_FILE, "rb"))
+    pool, props = pickle.load(open(POOL_FILE, "rb"))
     fixed_100 = pool[:100]
     fixed_idx = list(range(100))
-    return SimpleSeedEnv(pool, fixed_idx, K=K, n_gen=NGEN)
+    return SimpleSeedEnv(pool, fixed_idx, props, K=K, n_gen=NGEN)
 
 def mask_fn(env):
     return env.available.astype(bool)[None, :]
@@ -34,7 +34,7 @@ def main():
                         tensorboard_log=os.path.join(RUNS_DIR, "tb"))
     model.learn(total_timesteps=TOTAL_STEPS)
 
-    rewards = []
+    hv_list = []
     for _ in range(3):
         obs, _ = env.reset()
         done = False
@@ -44,12 +44,11 @@ def main():
             if env.env.available[action] == 0:
                 action = int(np.random.choice(valid))
             obs, reward, done, _, _ = env.step(action)
-        rewards.append(reward)
+        hv_list.append(env.env.last_hv)
 
     print("\n=== Evaluation ===")
-    print("Rewards:", rewards)
-    print(f"FINAL_HV: {np.mean(rewards):.4f}")
-
+    print("Pure Hypervolumes:", hv_list)
+    print(f"FINAL_HV: {np.mean(hv_list):.4f}")
 
 if __name__ == "__main__":
     os.makedirs(RUNS_DIR, exist_ok=True)

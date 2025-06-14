@@ -10,7 +10,7 @@ def run_script(filename, pattern="FINAL_HV: ([0-9.]+)", repeat=5):
     for i in range(repeat):
         print(f"[{filename} Run {i+1}]")
         try:
-            result = subprocess.run([PYTHON_EXEC, filename], capture_output=True, text=True, timeout=900)
+            result = subprocess.run([PYTHON_EXEC, filename], capture_output=True, text=True, timeout=1800)
             output = result.stdout + result.stderr
             print("----- Output Start -----")
             print(output.strip())

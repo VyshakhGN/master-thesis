@@ -1,25 +1,28 @@
-
+# simplified_seed_env.py
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
-import pickle
+from utils import decode_selfies
 from utils import get_objectives
 from evolution import run_nsga
 
 class SimpleSeedEnv(gym.Env):
-
-    metadata = {"render.modes": []}
-
-    def __init__(self, pool, fixed_idx, K=20, n_gen=20):
+    """
+    RL agent selects K molecules from pool.
+    Observation = per-molecule [QED, SA, MPO, RTB] vector or 0s if unavailable.
+    """
+    def __init__(self, pool, fixed_idx, props, K=20, n_gen=20):
         super().__init__()
         self.pool = pool
+        self.props = props  # shape = (N, 4)
         self.fixed_idx = fixed_idx
         self.K = K
         self.N = len(pool)
         self.n_gen = n_gen
 
         self.action_space = spaces.Discrete(self.N)
-        self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.N,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.N, 4), dtype=np.float32)
+        self.last_hv = 0.0  # ✅ track true hypervolume
 
         self.reset()
 
@@ -29,10 +32,11 @@ class SimpleSeedEnv(gym.Env):
         for i in self.fixed_idx:
             self.available[i] = 0
         self.selected = []
+        self.last_hv = 0.0  # ✅ reset HV tracker
         return self._obs(), {}
 
     def _obs(self):
-        return self.available.astype(np.float32)
+        return np.where(self.available[:, None] == 1, self.props, 0.0).astype(np.float32)
 
     def step(self, action: int):
         if self.available[action] == 0:
@@ -47,12 +51,20 @@ class SimpleSeedEnv(gym.Env):
             indices = self.fixed_idx + self.selected
             selfies = [self.pool[i] for i in indices]
             hv = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices), random_seed=42)
+            self.last_hv = hv  # ✅ store pure HV for external access
 
-            # QED bonus calculation
-            selected_smiles = [self.pool[i] for i in self.selected]
-            qed_scores = [get_objectives(smi)[0] for smi in selected_smiles if get_objectives(smi)]
-            qed_bonus = np.mean(qed_scores) if qed_scores else 0.0
+            # QED bonus
+            qed_scores = []
+            for i in self.selected:
+                smi = decode_selfies(self.pool[i])
+                if smi is None:
+                    continue
+                props = get_objectives(smi)
+                if props != [0.0, 1.0, 0.0, 0.0]:
+                    qed_scores.append(props[0])
 
+            # qed_bonus = np.mean(qed_scores) if qed_scores else 0.0
+            qed_bonus = 0
             λ = 0.3
             reward = hv + λ * qed_bonus
 

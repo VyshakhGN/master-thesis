@@ -66,7 +66,7 @@ def main():
 
     fig = plt.figure(figsize=(10, 6))
     pcp = PCP(
-        title="5D Pareto Front",
+        title="4D Pareto Front",
         axis_labels=["QED", "SA", "MPO", "RTB"],
     )
     pcp.add(F)
