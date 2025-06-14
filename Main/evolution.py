@@ -1,4 +1,3 @@
-
 import random
 import numpy as np
 from rdkit import Chem
@@ -40,13 +39,9 @@ def run_nsga(
     pop_size: int = 200,
     mutation_rate: float = 0.1,
     crossover_prob: float = 0.9,
-    random_seed: int | None = None,
     return_full: bool = False,
 ):
-    if random_seed is None:
-        random_seed = random.randint(0, 10_000)
 
-    # ---------- configure GA ----------
     problem = MolecularOptimization(seed_selfies)
     algorithm = NSGA2(
         pop_size=pop_size,
@@ -61,7 +56,6 @@ def run_nsga(
         problem,
         algorithm,
         termination,
-        seed=random_seed,
         verbose=False,
     )
 

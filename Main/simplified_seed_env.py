@@ -7,14 +7,11 @@ from utils import get_objectives
 from evolution import run_nsga
 
 class SimpleSeedEnv(gym.Env):
-    """
-    RL agent selects K molecules from pool.
-    Observation = per-molecule [QED, SA, MPO, RTB] vector or 0s if unavailable.
-    """
+
     def __init__(self, pool, fixed_idx, props, K=20, n_gen=20):
         super().__init__()
         self.pool = pool
-        self.props = props  # shape = (N, 4)
+        self.props = props
         self.fixed_idx = fixed_idx
         self.K = K
         self.N = len(pool)
@@ -22,7 +19,7 @@ class SimpleSeedEnv(gym.Env):
 
         self.action_space = spaces.Discrete(self.N)
         self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.N, 4), dtype=np.float32)
-        self.last_hv = 0.0  # ✅ track true hypervolume
+        self.last_hv = 0.0
 
         self.reset()
 
@@ -32,7 +29,7 @@ class SimpleSeedEnv(gym.Env):
         for i in self.fixed_idx:
             self.available[i] = 0
         self.selected = []
-        self.last_hv = 0.0  # ✅ reset HV tracker
+        self.last_hv = 0.0
         return self._obs(), {}
 
     def _obs(self):
@@ -50,8 +47,8 @@ class SimpleSeedEnv(gym.Env):
         if done:
             indices = self.fixed_idx + self.selected
             selfies = [self.pool[i] for i in indices]
-            hv = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices), random_seed=42)
-            self.last_hv = hv  # ✅ store pure HV for external access
+            hv = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices))
+            self.last_hv = hv
 
             # QED bonus
             qed_scores = []

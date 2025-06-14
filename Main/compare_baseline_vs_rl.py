@@ -30,8 +30,8 @@ def run_script(filename, pattern="FINAL_HV: ([0-9.]+)", repeat=5):
 print("=== Running train_simple_rl.py 5 times ===")
 rl_hvs = run_script("train_simple_rl.py", repeat=5)
 
-print("\n=== Running main.py 5 times ===")
-main_hvs = run_script("main.py", repeat=5)
+print("\n=== Running main.py 15 times ===")
+main_hvs = run_script("main.py", repeat=15)
 
 print("\n======== FINAL COMPARISON ========")
 def summarize(name, values):
