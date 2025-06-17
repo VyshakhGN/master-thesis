@@ -4,6 +4,7 @@ from operators import MyMutation
 from utils import load_smiles_from_file, decode_selfies, get_objectives
 from evolution import run_nsga
 
+
 # ------------- run parameters -----------------
 FILE = "zinc_subset.txt"
 
@@ -29,7 +30,6 @@ def build_seed_population(file_path: str, pop_size: int) -> list[str]:
 
 
 def main():
-    from utils import load_smiles_from_file
     pool = load_smiles_from_file(FILE, max_count=1000)
     fixed = pool[:100]
     rest = random.sample(pool[100:], 20)
