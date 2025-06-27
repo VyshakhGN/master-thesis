@@ -21,8 +21,8 @@ def main():
                 print(f"[fallback] {decoded} → {result}")
             else:
                 print(f"[valid]    {decoded} → {result}")
-            qed, sa, mpo, rtb = result
-            props.append([qed, sa, mpo, rtb])
+            qed, sa, mpo, tpsa = result
+            props.append([qed, sa, mpo, tpsa])
             filtered_selfies.append(selfie)
         except Exception as e:
             print(f"[skip] {decoded} failed with: {e}")

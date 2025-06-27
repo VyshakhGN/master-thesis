@@ -9,5 +9,5 @@ class MolecularOptimization(ElementwiseProblem):
     def _evaluate(self, x, out, *args, **kwargs):
         selfie = x[0]
         objectives = get_objectives(selfie)
-        # Minimize SA, maximize QED,MPO, and RTB.
+        # Minimize SA,TPSA, and maximize QED,MPO.
         out["F"] = [-objectives[0], objectives[1], -objectives[2], objectives[3]]

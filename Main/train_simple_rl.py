@@ -1,4 +1,3 @@
-# train_simple_rl.py
 import pickle, numpy as np, os
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.wrappers import ActionMasker

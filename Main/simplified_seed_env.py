@@ -60,7 +60,6 @@ class SimpleSeedEnv(gym.Env):
                 if props != [0.0, 1.0, 0.0, 0.0]:
                     qed_scores.append(props[0])
 
-            # qed_bonus = np.mean(qed_scores) if qed_scores else 0.0
             qed_bonus = 0
             λ = 0.3
             reward = hv + λ * qed_bonus

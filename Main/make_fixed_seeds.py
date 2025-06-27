@@ -1,4 +1,3 @@
-
 import pickle
 import random
 from utils import load_smiles_from_file

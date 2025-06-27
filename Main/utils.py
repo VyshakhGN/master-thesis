@@ -35,9 +35,9 @@ def get_objectives(smiles):
     qed = QED.qed(mol)
     sa = sascorer.calculateScore(mol) / 10
     mpo_score = task.objective.score(canonicalize(smiles))
-    rtb = Lipinski.NumRotatableBonds(mol) / 10  # Normalize to [0, 1]
+    tpsa = Descriptors.TPSA(mol) / 200  # normalize to ~0–1
 
-    return [qed, sa, mpo_score, rtb]
+    return [qed, sa, mpo_score, tpsa]
 
 def passes_drug_filters(mol):
     mw = Descriptors.MolWt(mol)

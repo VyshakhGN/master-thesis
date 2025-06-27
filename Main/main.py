@@ -46,14 +46,14 @@ def main():
     print(f"FINAL_HV: {hv:.4f}")
 
     X, F = result.X, result.F
-    qed_vals, sa_vals, mpo_vals, rtb_vals = -F[:, 0], F[:, 1], -F[:, 2], F[:, 3]
+    qed_vals, sa_vals, mpo_vals, tpsa_vals = -F[:, 0], F[:, 1], -F[:, 2], F[:, 3]
 
     from pymoo.visualization.pcp import PCP
 
     fig = plt.figure(figsize=(10, 6))
     pcp = PCP(
         title="4D Pareto Front",
-        axis_labels=["QED", "SA", "MPO", "RTB"],
+        axis_labels=["QED", "SA", "MPO", "TPSA"],
     )
     pcp.add(F)
     pcp.show()
@@ -67,10 +67,10 @@ def main():
     scored = [(smi, *get_objectives(smi)) for smi in unique_smiles]
     scored.sort(key=lambda x: -x[1])
 
-    for i, (smi, qed, sa, mpo, rtb) in enumerate(scored[:10], 1):
+    for i, (smi, qed, sa, mpo, tpsa) in enumerate(scored[:10], 1):
         print(
             f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | "
-            f"MPO: {mpo:.3f} | RTB: {rtb:.2f}"
+            f"MPO: {mpo:.3f} | RTB: {tpsa:.2f}"
         )
 
     print(f"\nTotal unique molecules in Pareto front: {len(unique_smiles)}")
