@@ -4,17 +4,18 @@ from sb3_contrib.common.wrappers import ActionMasker
 from simplified_seed_env import SimpleSeedEnv
 
 DEBUG = True
+RUN_STEPS = 10000
+RUN_BATCH = 512
+
 if DEBUG:
     POOL_FILE = "pool_with_props.pkl"
-    K = 20
-    NGEN = 20
-    TOTAL_STEPS = 5000
+    K = 30
+    NGEN = 50
+    TOTAL_STEPS = 10000
 else:
     K = 30
     NGEN = 50
     TOTAL_STEPS = 20000
-
-RUNS_DIR = "runs"
 
 def load_env():
     pool, props = pickle.load(open(POOL_FILE, "rb"))
@@ -29,8 +30,7 @@ def main():
     env = load_env()
     env = ActionMasker(env, mask_fn)
 
-    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=256, batch_size=256,
-                        tensorboard_log=os.path.join(RUNS_DIR, "tb"))
+    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=512, batch_size=512)
     model.learn(total_timesteps=TOTAL_STEPS)
 
     hv_list = []
@@ -50,5 +50,4 @@ def main():
     print(f"FINAL_HV: {np.mean(hv_list):.4f}")
 
 if __name__ == "__main__":
-    os.makedirs(RUNS_DIR, exist_ok=True)
     main()
