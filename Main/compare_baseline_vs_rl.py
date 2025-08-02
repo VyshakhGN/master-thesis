@@ -12,9 +12,9 @@ def extract_run_meta(filepath):
     steps = batch = None
     with open(filepath, "r") as f:
         for line in f:
-            if line.startswith("RUN_META_STEPS"):
+            if line.startswith("RUN_STEPS"):
                 steps = int(re.findall(r"\d+", line)[0])
-            elif line.startswith("RUN_META_BATCH"):
+            elif line.startswith("RUN_BATCH"):
                 batch = int(re.findall(r"\d+", line)[0])
     return steps, batch
 

@@ -4,14 +4,14 @@ from sb3_contrib.common.wrappers import ActionMasker
 from simplified_seed_env import SimpleSeedEnv
 
 DEBUG = True
-RUN_STEPS = 10000
-RUN_BATCH = 512
+RUN_STEPS = 5000
+RUN_BATCH = 128
 
 if DEBUG:
     POOL_FILE = "pool_with_props.pkl"
     K = 30
     NGEN = 50
-    TOTAL_STEPS = 10000
+    TOTAL_STEPS = 5000
 else:
     K = 30
     NGEN = 50
@@ -30,7 +30,7 @@ def main():
     env = load_env()
     env = ActionMasker(env, mask_fn)
 
-    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=512, batch_size=512)
+    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=128, batch_size=128)
     model.learn(total_timesteps=TOTAL_STEPS)
 
     hv_list = []
