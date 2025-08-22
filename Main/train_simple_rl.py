@@ -9,9 +9,9 @@ RUN_BATCH = 128
 
 if DEBUG:
     POOL_FILE = "pool_with_props.pkl"
-    K = 30
+    K = 20
     NGEN = 50
-    TOTAL_STEPS = 5000
+    TOTAL_STEPS = 10000
 else:
     K = 30
     NGEN = 50

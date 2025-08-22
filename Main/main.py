@@ -11,7 +11,7 @@ FILE = "zinc_subset.txt"
 DEBUG = True
 
 if DEBUG:
-    POP_SIZE = 130
+    POP_SIZE = 120
     NGEN = 50
 else:
     POP_SIZE = 200
@@ -32,7 +32,7 @@ def build_seed_population(file_path: str, pop_size: int) -> list[str]:
 def main():
     pool = load_smiles_from_file(FILE, max_count=1000)
     fixed = pool[:100]
-    rest = random.sample(pool[100:], 30)
+    rest = random.sample(pool[100:], 20)
     seed_selfies = fixed + rest
 
     hv, result = run_nsga(
