@@ -63,7 +63,7 @@ def main():
     for i, (smi, qed, sa, mpo, tpsa) in enumerate(scored[:10], 1):
         print(
             f"{i}. SMILES: {smi} | QED: {qed:.3f} | SA: {sa:.3f} | "
-            f"MPO: {mpo:.3f} | RTB: {tpsa:.2f}"
+            f"MPO: {mpo:.3f} | TPSA: {tpsa:.2f}"
         )
 
     print(f"\nTotal unique molecules in Pareto front: {len(unique_smiles)}")
