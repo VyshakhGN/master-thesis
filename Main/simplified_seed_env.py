@@ -1,4 +1,3 @@
-
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
@@ -8,14 +7,15 @@ from evolution import run_nsga
 
 class SimpleSeedEnv(gym.Env):
 
-    def __init__(self, pool, fixed_idx, props, K=20, n_gen=20):
+    def __init__(self, pool, props, K=20, n_gen=20, base_seeds=100, rng=None):
         super().__init__()
         self.pool = pool
         self.props = props
-        self.fixed_idx = fixed_idx
         self.K = K
         self.N = len(pool)
         self.n_gen = n_gen
+        self.base_seeds = base_seeds
+        self.rng = np.random.default_rng(rng)
 
         self.action_space = spaces.Discrete(self.N)
         self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(self.N, 4), dtype=np.float32)
@@ -26,6 +26,7 @@ class SimpleSeedEnv(gym.Env):
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         self.available = np.ones(self.N, dtype=np.int8)
+        self.fixed_idx = self.rng.choice(self.N, size=self.base_seeds, replace=False).tolist()
         for i in self.fixed_idx:
             self.available[i] = 0
         self.selected = []
@@ -49,21 +50,7 @@ class SimpleSeedEnv(gym.Env):
             selfies = [self.pool[i] for i in indices]
             hv = run_nsga(selfies, n_gen=self.n_gen, pop_size=len(indices))
             self.last_hv = hv
-
-            # QED bonus
-            qed_scores = []
-            for i in self.selected:
-                smi = decode_selfies(self.pool[i])
-                if smi is None:
-                    continue
-                props = get_objectives(smi)
-                if props != [0.0, 1.0, 0.0, 0.0]:
-                    qed_scores.append(props[0])
-
-            qed_bonus = 0
-            λ = 0.3
-            reward = hv + λ * qed_bonus
-
-            print(f"[env] Done. HV = {hv:.4f}, QED = {qed_bonus:.4f}, Total Reward = {reward:.4f}")
+            reward = hv
+            print(f"[env] Done. HV = {hv:.4f}, Total Reward = {reward:.4f}")
 
         return self._obs(), reward, done, False, {}

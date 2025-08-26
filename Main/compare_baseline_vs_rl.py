@@ -23,10 +23,11 @@ def run_script(filename, pattern="FINAL_HV: ([0-9.]+)", repeat=5):
     for i in range(repeat):
         print(f"[{filename} Run {i+1}]")
         try:
-            result = subprocess.run([PYTHON_EXEC, filename], capture_output=True, text=True, timeout=3600)
+            result = subprocess.run([PYTHON_EXEC, filename], capture_output=True, text=True, timeout=5600)
             output = result.stdout + result.stderr
             print("----- Output Start -----")
             print(output.strip())
+
             print("------ Output End ------")
 
             matches = re.findall(pattern, output)
@@ -40,8 +41,8 @@ def run_script(filename, pattern="FINAL_HV: ([0-9.]+)", repeat=5):
             print(" → Timeout.")
     return values
 
-print("=== Running train_simple_rl.py 5 times ===")
-rl_hvs = run_script("train_simple_rl.py", repeat=5)
+print("=== Running train_simple_rl.py 15 times ===")
+rl_hvs = run_script("train_simple_rl.py", repeat=15)
 
 steps, batch = extract_run_meta("train_simple_rl.py")
 rl_output_file = os.path.join(RUNS_DIR, f"steps{steps}_batch{batch}_rl.txt")

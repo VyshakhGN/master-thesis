@@ -1,4 +1,4 @@
-import pickle, numpy as np, os
+import pickle, numpy as np
 from sb3_contrib import MaskablePPO
 from sb3_contrib.common.wrappers import ActionMasker
 from simplified_seed_env import SimpleSeedEnv
@@ -9,9 +9,9 @@ RUN_BATCH = 128
 
 if DEBUG:
     POOL_FILE = "pool_with_props.pkl"
-    K = 20
-    NGEN = 50
-    TOTAL_STEPS = 10000
+    K = 50
+    NGEN = 75
+    TOTAL_STEPS = 15000
 else:
     K = 30
     NGEN = 50
@@ -19,9 +19,7 @@ else:
 
 def load_env():
     pool, props = pickle.load(open(POOL_FILE, "rb"))
-    fixed_100 = pool[:100]
-    fixed_idx = list(range(100))
-    return SimpleSeedEnv(pool, fixed_idx, props, K=K, n_gen=NGEN)
+    return SimpleSeedEnv(pool, props, K=K, n_gen=NGEN, base_seeds=100)
 
 def mask_fn(env):
     return env.available.astype(bool)[None, :]
@@ -29,8 +27,7 @@ def mask_fn(env):
 def main():
     env = load_env()
     env = ActionMasker(env, mask_fn)
-
-    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=128, batch_size=128)
+    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=512, batch_size=512)
     model.learn(total_timesteps=TOTAL_STEPS)
 
     hv_list = []
