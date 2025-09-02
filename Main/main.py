@@ -10,7 +10,7 @@ FILE = "zinc_subset.txt"
 DEBUG = True
 
 if DEBUG:
-    K = 30
+    K = 100
     POP_SIZE = 100 + K
     NGEN = 50
 else:

@@ -42,7 +42,7 @@ def run_script(filename, pattern="FINAL_HV: ([0-9.]+)", repeat=5):
     return values
 
 print("=== Running train_simple_rl.py 15 times ===")
-rl_hvs = run_script("train_simple_rl.py", repeat=15)
+rl_hvs = run_script("train_simple_rl.py", repeat=5)
 
 steps, batch = extract_run_meta("train_simple_rl.py")
 rl_output_file = os.path.join(RUNS_DIR, f"steps{steps}_batch{batch}_rl.txt")

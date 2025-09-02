@@ -9,9 +9,9 @@ RUN_BATCH = 128
 
 if DEBUG:
     POOL_FILE = "pool_with_props.pkl"
-    K = 50
-    NGEN = 75
-    TOTAL_STEPS = 15000
+    K = 100
+    NGEN = 50
+    TOTAL_STEPS = 7000
 else:
     K = 30
     NGEN = 50
@@ -27,7 +27,7 @@ def mask_fn(env):
 def main():
     env = load_env()
     env = ActionMasker(env, mask_fn)
-    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=512, batch_size=512)
+    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps=700, batch_size=700, n_epochs=15)
     model.learn(total_timesteps=TOTAL_STEPS)
 
     hv_list = []
