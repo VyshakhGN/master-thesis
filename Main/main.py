@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from operators import MyMutation
 from utils import load_smiles_from_file, decode_selfies, get_objectives
 from evolution import run_nsga
+from pymoo.indicators.hv import HV
+import numpy as np
 
 # ------------- run parameters -----------------
 FILE = "zinc_subset.txt"
@@ -10,7 +12,7 @@ FILE = "zinc_subset.txt"
 DEBUG = True
 
 if DEBUG:
-    K = 30
+    K = 100
     POP_SIZE = 100 + K
     NGEN = 50
 else:
@@ -32,13 +34,9 @@ def main():
 
     seed_selfies = base_100 + extra_k
 
-    hv, result = run_nsga(
-        seed_selfies,
-        n_gen=NGEN,
-        pop_size=POP_SIZE,
-        mutation_rate=MUTATION_RATE,
-        return_full=True
-    )
+    hv, result = run_nsga(seed_selfies, n_gen=NGEN, pop_size=POP_SIZE, return_full=True)
+    curve = [HV(ref_point=np.array([1,1,1,1]))(h.pop.get("F")) for h in result.history]
+    # print("HV_PER_GEN:", ",".join(f"{v:.6f}" for v in curve))
     print(f"\nHyper-volume reward (episode): {hv:.4f}")
     print(f"FINAL_HV: {hv:.4f}")
 

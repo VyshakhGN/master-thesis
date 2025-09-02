@@ -1,4 +1,4 @@
-import random
+
 import numpy as np
 from rdkit import Chem
 
@@ -57,6 +57,7 @@ def run_nsga(
         algorithm,
         termination,
         verbose=False,
+        save_history=True
     )
 
     ref_point = np.array([1.0, 1.0, 1.0, 1.0])

@@ -39,23 +39,6 @@ def get_objectives(smiles):
 
     return [qed, sa, mpo_score, tpsa]
 
-def passes_drug_filters(mol):
-    mw = Descriptors.MolWt(mol)
-    logp = Descriptors.MolLogP(mol)
-    h_donors = Lipinski.NumHDonors(mol)
-    h_acceptors = Lipinski.NumHAcceptors(mol)
-    rot_bonds = Lipinski.NumRotatableBonds(mol)
-    heavy_atoms = mol.GetNumHeavyAtoms()
-
-    return (
-        150 <= mw <= 500 and
-        logp <= 5 and
-        h_donors <= 5 and
-        h_acceptors <= 10 and
-        rot_bonds <= 10 and
-        heavy_atoms >= 5
-    )
-
 def load_smiles_from_file(path, max_count=200):
     with open(path, "r") as f:
         smiles_lines = [line.strip().split()[0] for line in f if line.strip()]
@@ -63,7 +46,7 @@ def load_smiles_from_file(path, max_count=200):
     filtered = []
     for smi in smiles_lines:
         mol = Chem.MolFromSmiles(smi)
-        if mol and passes_drug_filters(mol):
+        if mol:
             encoded = encode_smiles(smi)
             if encoded:
                 filtered.append(encoded)
