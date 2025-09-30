@@ -1,11 +1,11 @@
-**Legend:
+**'Legend:
 Full draft 
 
 Heavy rewrite
 
 Light edit 
 
-Brainstorming/Content support**
+Brainstorming/Content support'**
 
 
 evolution.py
