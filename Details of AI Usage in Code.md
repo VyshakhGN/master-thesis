@@ -1,67 +1,40 @@
 **Legend**
 
-- **Full draft** - AI produced a complete version
+- **Full draft** **(FD)** \- AI produced a complete version
+- **Heavy rewrite (HW)** - AI drafts, I rephrase/restructure it
+- **Light edit** **(LE)** \- AI drafts, I make many changes on top of that
+- **Brainstorming/Content support (B/C)** - AI helps generate ideas or outlines
 
-- **Heavy rewrite** - AI drafts, I rephrase/restructure it
+**File by File AI Usage Declaration**
 
-- **Light edit**  - AI drafts, I make many changes on top of that
+**evolution.py** - SelfiesDuplicateEliminator - HR - Strengthened duplicate handling.
 
-- **Brainstorming/Content support** - AI helps generate ideas or outlines
+**main.py** - LE - Light help in Logic.
 
----
+**make_fixed_seeds.py** - LE - Pickle module help.
 
-
-**File by File**
-
-**compare_baseline_vs_rl.py**
-- No AI Usage
-
-**evolution.py**
-- SelfiesDuplicateEliminator - Heavy Rewrite
-
-**main.py**
-- main() - Light edit
-
-**make_fixed_seeds.py**
-- Light edit
-
-**make_pool_props.py**
-- main() - Light edit
+**make_pool_props.py** - main() - Light edits for iteration and caching.
 
 **operators.py**
-- MySampling() - Heavy Rewrite
-- _safe_insert_token_mutation() - Light edit
-- MyCrossover(), MyMutation() - Brainstorming
 
-**problem.py**
-- No AI Usage
+MySampling() - HR - Help in matching with pymoo.
 
-**sascorer.py**
-- Imported file from public package
+\_safe_insert_token_mutation() - LE - Logic help.
 
-**simplified_seed_env.py**
-- __init__() - Light edit
-- reset() - Heavy Rewrite
+MyCrossover(), MyMutation() - B
+
+**sascorer.py** - Imported file from public package.
+
+**simplified_seed_env.py** - **init**() - LE - Help in action masking and space definitions.
+
+reset() - HR - Logic help.
 
 **train_simple_rl.py**
-- evaluate_once() - Light edit
-- HVPerUpdateCallback(BaseCallback) - Full draft
-- main() - Light edit
 
-**utils.py**
-- Light edit
+evaluate_once() - LE - Logic help.
 
+HVPerUpdateCallback(BaseCallback) - FD - Logging for Investigation 3.
 
+main() - LE - Logic help.
 
-
-
-
-
-
-
-
-
-
-
-
-
+**utils.py** - LE - Clarity, edge-case handling.
